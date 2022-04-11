@@ -1,10 +1,10 @@
 # golang_midterm
 
 A little bit documentation:
-1.	http://localhost:8080/store - by this get request we can all our key-value pair. example below:
+1.	http://localhost:8080/store - by this get request we can get all our key-value pair. example below:
     ![image](https://user-images.githubusercontent.com/64863365/162787882-53720b09-a87b-455e-85c5-4811e1df6fe8.png)
     
-2.	http://localhost:8080/store/:key –by this get request we can specific key-value pair with key
+2.	http://localhost:8080/store/:key –by this get request we can get specific key-value pair with key
     ![image](https://user-images.githubusercontent.com/64863365/162787940-96b4fd8e-4b47-47cc-904e-4910aa961122.png)
 
 3.	http://localhost:8080/store - by this POST request we can create new key-value pair. we should send json data(both required) in the body of request like this:
