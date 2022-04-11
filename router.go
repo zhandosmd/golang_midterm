@@ -24,8 +24,32 @@ var c = Container{
 	counters: map[string]string{"a": "value a", "b": "value b"},
 }
 
+var wg sync.WaitGroup
+
 func homeLink(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Golang Midterm Project")
+}
+
+func (c *Container) updateValueReference(key string, newValue string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.counters[key] = newValue
+}
+
+func (c *Container) deleteValueReference(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.counters, key)
+}
+
+var updateValue = func(key string, newValue string) {
+	c.updateValueReference(key, newValue)
+	wg.Done()
+}
+
+var deleteKey = func(key string) {
+	c.deleteValueReference(key)
+	wg.Done()
 }
 
 func createEvent(w http.ResponseWriter, r *http.Request) {
@@ -36,9 +60,10 @@ func createEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.Unmarshal(reqBody, &newEvent)
-	c.counters[newEvent.Key] = newEvent.Value
+	wg.Add(1)
+	updateValue(newEvent.Key, newEvent.Value)
+	wg.Wait()
 	w.WriteHeader(http.StatusCreated)
-
 	json.NewEncoder(w).Encode(newEvent)
 }
 
@@ -71,7 +96,9 @@ func updateEvent(w http.ResponseWriter, r *http.Request) {
 
 	for key := range c.counters {
 		if key == eventID {
-			c.counters[key] = updatedEvent.Value
+			wg.Add(1)
+			updateValue(key, updatedEvent.Value)
+			wg.Wait()
 			var updatedElement event
 			updatedElement.Key = key
 			updatedElement.Value = updatedEvent.Value
@@ -83,9 +110,11 @@ func updateEvent(w http.ResponseWriter, r *http.Request) {
 func deleteEvent(w http.ResponseWriter, r *http.Request) {
 	eventID := mux.Vars(r)["id"]
 
-	for key, _ := range c.counters {
+	for key := range c.counters {
 		if key == eventID {
-			delete(c.counters, key)
+			wg.Add(1)
+			deleteKey(key)
+			wg.Wait()
 			fmt.Fprintf(w, "The event with KEY %v has been deleted successfully", eventID)
 		}
 	}
